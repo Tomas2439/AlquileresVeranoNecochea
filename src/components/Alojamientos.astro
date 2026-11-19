@@ -1,0 +1,27 @@
+---
+import { ALOJAMIENTOS } from '../data/alojamientos';
+import AlojamientoCard from './AlojamientoCard.astro';
+import Galeria from './Galeria.astro';
+---
+
+<section id="alojamientos" class="py-16 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-xl">
+      <h2
+        class="font-serif font-medium tracking-[-0.015em] text-cream"
+        style="font-size: var(--text-h2); line-height: 1.1;"
+      >
+        Nuestros alojamientos
+      </h2>
+      <p class="mt-3 text-base leading-relaxed text-sand">
+        Tocá cualquier foto para ver la galería de cada espacio.
+      </p>
+    </div>
+
+    <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {ALOJAMIENTOS.map((alojamiento) => <AlojamientoCard alojamiento={alojamiento} />)}
+    </div>
+  </div>
+
+  <Galeria />
+</section>

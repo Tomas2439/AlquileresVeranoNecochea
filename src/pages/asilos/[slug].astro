@@ -1,0 +1,196 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Galeria from '../../components/Galeria.astro';
+import CtaWhatsapp from '../../components/CtaWhatsapp.astro';
+import Footer from '../../components/Footer.astro';
+import WhatsappFloat from '../../components/WhatsappFloat.astro';
+import {
+  ASILOS,
+  getUnidadesByAsilo,
+  WHATSAPP_URL,
+  type AsiloGrupo,
+} from '../../data/alojamientos';
+import { getFolderImages } from '../../utils/media';
+
+export function getStaticPaths() {
+  return ASILOS.map((asilo) => ({
+    params: { slug: asilo.slug },
+    props: { asilo },
+  }));
+}
+
+interface Props {
+  asilo: AsiloGrupo;
+}
+
+const { asilo } = Astro.props;
+const unidades = getUnidadesByAsilo(asilo);
+---
+
+<Layout
+  title={`${asilo.nombre} | AVN – Alquiler de Verano Necochea`}
+  description={`${asilo.nombre}: ${asilo.ubicacionDetalle} Alquiler de verano en Necochea.`}
+>
+  <Header />
+
+  <main id="contenido-principal">
+    <section class="border-b border-[var(--border-soft)] bg-bg-deep py-12 sm:py-16">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 text-sm text-sand hover:text-cream"
+        >
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+          </svg>
+          Volver al inicio
+        </a>
+
+        <div class="mt-6 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <h1
+              class="font-serif font-medium tracking-[-0.02em] text-cream"
+              style="font-size: var(--text-hero); line-height: 1.04;"
+            >
+              {asilo.nombre}
+            </h1>
+            <span class="label-kicker mt-3 block">{asilo.zona}</span>
+          </div>
+
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-primary self-start md:self-auto"
+          >
+            Consultar disponibilidad
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-[var(--border-soft)] py-14 sm:py-20">
+      <div class="mx-auto max-w-6xl space-y-16 px-4 sm:px-6 lg:px-8">
+        {
+          unidades.map((unidad, unitIdx) => {
+            const images = getFolderImages(unidad.slug).slice(0, 5);
+            return (
+              <div class="space-y-6">
+                <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-[var(--border-soft)] pb-4">
+                  <h2
+                    class="font-serif font-medium text-cream"
+                    style="font-size: var(--text-h2); line-height: 1.1;"
+                  >
+                    {unidad.nombre}
+                  </h2>
+                  <span class="label-kicker">{unidad.capacidad}</span>
+                </div>
+
+                {images.length > 0 ? (
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {images.map((img, imgIdx) => (
+                      <button
+                        type="button"
+                        data-open-galeria={unidad.slug}
+                        aria-label={`Ampliar foto ${imgIdx + 1} de ${unidad.nombre}`}
+                        class="group aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-[12px] border border-[var(--border-soft)] bg-surface"
+                      >
+                        <Image
+                          src={img}
+                          alt={
+                            unidad.fotosAlt[imgIdx] ??
+                            `${unidad.nombre} – foto ${imgIdx + 1}`
+                          }
+                          loading={unitIdx === 0 && imgIdx === 0 ? 'eager' : 'lazy'}
+                          widths={[420, 760]}
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-open-galeria={unidad.slug}
+                    aria-label={`Galería de ${unidad.nombre}`}
+                    class="flex aspect-[16/9] max-h-80 w-full cursor-pointer items-center justify-center rounded-[12px] border border-[var(--border-soft)] bg-surface p-6 text-center"
+                  >
+                    <span class="label-kicker rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-3 py-1.5">
+                      FOTO PENDIENTE – {unidad.slug}
+                    </span>
+                  </button>
+                )}
+              </div>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <section class="py-14 sm:py-20">
+      <div class="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <div class="rounded-[12px] border border-[var(--border-soft)] bg-surface p-6 sm:p-8">
+          <h2
+            class="font-serif font-medium text-cream"
+            style="font-size: var(--text-h2); line-height: 1.1;"
+          >
+            Detalles
+          </h2>
+          <dl class="mt-6 space-y-4 text-sm">
+            {
+              unidades.map((unidad) => (
+                <div class="flex items-baseline justify-between gap-4 border-b border-[var(--border-soft)] pb-3">
+                  <dt class="font-medium text-cream">{unidad.nombre}</dt>
+                  <dd class="text-sand">{unidad.capacidad}</dd>
+                </div>
+              ))
+            }
+            <div class="flex items-baseline justify-between gap-4 border-b border-[var(--border-soft)] pb-3">
+              <dt class="font-medium text-cream">Check-in</dt>
+              <dd class="text-sand">14:00 hs (desde las 2 de la tarde)</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-4 border-b border-[var(--border-soft)] pb-3">
+              <dt class="font-medium text-cream">Check-out</dt>
+              <dd class="text-sand">10:00 hs (hasta las 10 de la mañana)</dd>
+            </div>
+          </dl>
+
+          <p class="label-kicker mt-6 inline-block rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-3 py-1.5">
+            DETALLES PENDIENTES – equipamiento y servicios a confirmar
+          </p>
+        </div>
+
+        <div class="rounded-[12px] border border-[var(--border-soft)] bg-surface p-6 sm:p-8">
+          <h2
+            class="font-serif font-medium text-cream"
+            style="font-size: var(--text-h2); line-height: 1.1;"
+          >
+            Ubicación
+          </h2>
+          <p class="mt-4 text-base leading-relaxed text-sand">
+            {asilo.ubicacionDetalle}
+          </p>
+          <p class="label-kicker mt-6 inline-block rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-3 py-1.5">
+            MAPA / DIRECCIÓN EXACTA PENDIENTE
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <CtaWhatsapp />
+  </main>
+
+  <Galeria />
+  <Footer />
+  <WhatsappFloat />
+</Layout>

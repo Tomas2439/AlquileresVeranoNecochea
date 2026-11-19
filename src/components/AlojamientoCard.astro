@@ -1,0 +1,73 @@
+---
+import { Image } from 'astro:assets';
+import { WHATSAPP_URL, type Alojamiento } from '../data/alojamientos';
+import { getFolderImages } from '../utils/media';
+
+interface Props {
+  alojamiento: Alojamiento;
+}
+
+const { alojamiento } = Astro.props;
+const images = getFolderImages(alojamiento.slug);
+const coverImage = images[0];
+const coverAlt =
+  alojamiento.fotosAlt[0] ?? `${alojamiento.nombre} – ${alojamiento.capacidad}`;
+---
+
+<article
+  class="reveal-on-scroll flex flex-col overflow-hidden rounded-[12px] border border-[var(--border-soft)] bg-surface shadow-[var(--shadow-warm)]"
+>
+  <button
+    type="button"
+    data-open-galeria={alojamiento.slug}
+    aria-label={`Ver galería de fotos de ${alojamiento.nombre}`}
+    class="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-bg-deep text-left"
+  >
+    {
+      coverImage ? (
+        <>
+          <Image
+            src={coverImage}
+            alt={coverAlt}
+            loading="lazy"
+            widths={[400, 720]}
+            sizes="(max-width: 768px) 100vw, 33vw"
+            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+          {images.length > 1 && (
+            <span class="label-kicker absolute right-3 bottom-3 rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-2.5 py-1">
+              {images.length} fotos
+            </span>
+          )}
+        </>
+      ) : (
+        <div class="flex h-full w-full flex-col items-center justify-center bg-surface p-6 text-center">
+          <span class="label-kicker rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-3 py-1.5">
+            FOTO PENDIENTE – {alojamiento.slug}
+          </span>
+        </div>
+      )
+    }
+  </button>
+
+  <div class="flex flex-1 flex-col justify-between gap-5 p-6">
+    <div>
+      <h3
+        class="font-serif font-semibold tracking-[-0.01em] text-cream"
+        style="font-size: var(--text-h3); line-height: 1.2;"
+      >
+        {alojamiento.nombre}
+      </h3>
+      <span class="label-kicker mt-1.5 block">{alojamiento.capacidad}</span>
+    </div>
+
+    <a
+      href={WHATSAPP_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-primary w-full text-center"
+    >
+      Consultar disponibilidad
+    </a>
+  </div>
+</article>

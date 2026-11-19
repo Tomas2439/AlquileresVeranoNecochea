@@ -1,0 +1,76 @@
+---
+interface Props {
+  url: string;
+  title: string;
+}
+
+const { url, title } = Astro.props;
+
+function toEmbedUrl(rawUrl: string): string | null {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.hostname.includes('youtube.com')) {
+      const id = parsed.searchParams.get('v');
+      return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1` : null;
+    }
+    if (parsed.hostname === 'youtu.be') {
+      const id = parsed.pathname.slice(1);
+      return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1` : null;
+    }
+    if (parsed.hostname.includes('vimeo.com')) {
+      const id = parsed.pathname.split('/').filter(Boolean).pop();
+      return id ? `https://player.vimeo.com/video/${id}?autoplay=1` : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+const embedUrl = toEmbedUrl(url);
+---
+
+{
+  embedUrl && (
+    <div
+      data-video-embed={embedUrl}
+      data-video-title={title}
+      class="relative aspect-video w-full overflow-hidden rounded-[12px] border border-[var(--border-soft)] bg-surface"
+    >
+      <button
+        type="button"
+        data-video-trigger
+        aria-label={`Reproducir video: ${title}`}
+        class="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3 bg-bg-deep/80 p-6 text-cream hover:bg-bg-deep"
+      >
+        <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-cream shadow-[var(--shadow-warm)]">
+          <svg class="ml-0.5 h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+        <span class="text-sm font-medium text-sand">{title}</span>
+      </button>
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-video-embed]').forEach((wrapper) => {
+    const trigger = wrapper.querySelector('[data-video-trigger]');
+    const embedUrl = wrapper.getAttribute('data-video-embed');
+    const title = wrapper.getAttribute('data-video-title') ?? 'Video';
+
+    trigger?.addEventListener('click', () => {
+      if (!embedUrl) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.title = title;
+      iframe.loading = 'lazy';
+      iframe.allow =
+        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.className = 'h-full w-full border-0';
+      wrapper.replaceChildren(iframe);
+    });
+  });
+</script>

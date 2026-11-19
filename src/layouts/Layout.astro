@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'AVN – Alquiler de Verano Necochea | Cabañas en Villa del Deportista',
+  description = 'Alquiler de verano en Necochea: cabañas en Villa del Deportista y departamento en zona céntrica. Tu refugio cerca del mar para bajar el ritmo y disfrutar.',
+} = Astro.props;
+
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.href;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="AVN – Alquiler de Verano Necochea" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Google Fonts: Cormorant Garamond (500, 600) & Poppins (400, 500, 600) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@400;500;600&display=swap"
+    />
+  </head>
+  <body class="bg-bg text-cream font-sans antialiased selection:bg-terracotta selection:text-cream">
+    <a
+      href="#contenido-principal"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-[10px] focus:bg-terracotta focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-cream"
+    >
+      Ir al contenido principal
+    </a>
+
+    <slot />
+
+    <script>
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced && 'IntersectionObserver' in window) {
+        document.documentElement.classList.add('js-ready');
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }
+        );
+
+        document.querySelectorAll('.reveal-on-scroll').forEach((el) => observer.observe(el));
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+---
+import LogoAvn from './LogoAvn.astro';
+import { ASILOS, WHATSAPP_URL } from '../data/alojamientos';
+---
+
+<header class="sticky top-0 z-40 border-b border-[var(--border-soft)] bg-bg-deep">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+    <a href="/" aria-label="AVN – Ir al inicio" class="shrink-0">
+      <LogoAvn compact />
+    </a>
+
+    <nav aria-label="Navegación principal" class="flex items-center gap-4 sm:gap-6">
+      {
+        ASILOS.map((asilo) => (
+          <a
+            href={`/asilos/${asilo.slug}`}
+            class="text-sm font-normal text-sand hover:text-cream"
+          >
+            {asilo.nombre}
+          </a>
+        ))
+      }
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden rounded-[10px] border border-[var(--border-soft)] bg-terracotta px-4 py-2 text-sm font-semibold text-cream hover:bg-terracotta-h md:inline-flex"
+      >
+        Consultar
+      </a>
+    </nav>
+  </div>
+</header>

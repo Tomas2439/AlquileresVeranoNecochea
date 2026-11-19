@@ -1,0 +1,35 @@
+---
+import LogoAvn from './LogoAvn.astro';
+import {
+  INSTAGRAM_HANDLE,
+  INSTAGRAM_URL,
+  WHATSAPP_URL,
+} from '../data/alojamientos';
+---
+
+<footer class="border-t border-[var(--border-soft)] bg-bg-deep py-12 pb-24 md:pb-12">
+  <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+    <a href="/" aria-label="AVN – Volver al inicio">
+      <LogoAvn />
+    </a>
+
+    <div class="flex flex-col gap-3 sm:items-end">
+      <a
+        href={INSTAGRAM_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm font-medium text-sand hover:text-cream"
+      >
+        {INSTAGRAM_HANDLE}
+      </a>
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm font-medium text-cream underline decoration-terracotta underline-offset-4 hover:text-sand"
+      >
+        Consultar por WhatsApp
+      </a>
+    </div>
+  </div>
+</footer>

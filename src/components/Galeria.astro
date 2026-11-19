@@ -1,0 +1,224 @@
+---
+import { getImage } from 'astro:assets';
+import { ALOJAMIENTOS } from '../data/alojamientos';
+import { getFolderImages } from '../utils/media';
+
+interface GaleriaFoto {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface GaleriaItem {
+  slug: string;
+  nombre: string;
+  capacidad: string;
+  fotos: GaleriaFoto[];
+}
+
+const galeriaItems: GaleriaItem[] = await Promise.all(
+  ALOJAMIENTOS.map(async (alojamiento) => {
+    const rawImages = getFolderImages(alojamiento.slug).slice(0, 5);
+    const fotos = await Promise.all(
+      rawImages.map(async (img, index) => {
+        const optimized = await getImage({ src: img, width: 1400, format: 'webp' });
+        return {
+          src: optimized.src,
+          alt:
+            alojamiento.fotosAlt[index] ??
+            `${alojamiento.nombre} – foto ${index + 1}`,
+          width: optimized.attributes.width ?? 1200,
+          height: optimized.attributes.height ?? 900,
+        };
+      })
+    );
+
+    return {
+      slug: alojamiento.slug,
+      nombre: alojamiento.nombre,
+      capacidad: alojamiento.capacidad,
+      fotos,
+    };
+  })
+);
+---
+
+<dialog
+  id="avn-galeria-dialog"
+  aria-labelledby="galeria-titulo"
+  class="m-auto w-[min(92vw,58rem)] max-w-none rounded-[14px] border border-[var(--border-soft)] bg-bg-deep p-0 text-cream shadow-[var(--shadow-warm)] backdrop:bg-black/80"
+>
+  <div class="flex items-center justify-between gap-4 border-b border-[var(--border-soft)] px-5 py-4 sm:px-6">
+    <div class="min-w-0">
+      <span id="galeria-capacidad" class="label-kicker block"></span>
+      <h3 id="galeria-titulo" class="mt-0.5 font-serif text-2xl font-semibold text-cream"></h3>
+    </div>
+
+    <button
+      type="button"
+      id="galeria-cerrar"
+      aria-label="Cerrar galería"
+      class="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-surface text-cream hover:bg-terracotta"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="relative bg-bg p-4 sm:p-6">
+    <div id="galeria-visor" class="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[10px] bg-surface">
+      <img
+        id="galeria-imagen"
+        alt=""
+        class="hidden h-full w-full object-contain"
+      />
+      <div id="galeria-placeholder" class="hidden flex-col items-center justify-center p-6 text-center">
+        <span id="galeria-placeholder-tag" class="label-kicker rounded-[10px] border border-[var(--border-soft)] bg-bg-deep px-3 py-1.5"></span>
+        <p class="mt-3 max-w-sm text-sm text-sand">
+          Todavía no hay fotos cargadas para este alojamiento.
+        </p>
+      </div>
+    </div>
+
+    <div id="galeria-controles" class="mt-4 flex items-center justify-between gap-4">
+      <button
+        type="button"
+        id="galeria-prev"
+        aria-label="Foto anterior"
+        class="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border-soft)] bg-surface px-4 py-2 text-sm font-medium text-cream hover:bg-terracotta disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Anterior
+      </button>
+
+      <span id="galeria-contador" class="text-sm text-sand" aria-live="polite"></span>
+
+      <button
+        type="button"
+        id="galeria-next"
+        aria-label="Foto siguiente"
+        class="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[var(--border-soft)] bg-surface px-4 py-2 text-sm font-medium text-cream hover:bg-terracotta disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Siguiente
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<script type="application/json" id="avn-galeria-data" set:html={JSON.stringify(galeriaItems)}></script>
+
+<script>
+  interface GaleriaFoto {
+    src: string;
+    alt: string;
+  }
+  interface GaleriaItem {
+    slug: string;
+    nombre: string;
+    capacidad: string;
+    fotos: GaleriaFoto[];
+  }
+
+  const dataEl = document.getElementById('avn-galeria-data');
+  const dialog = document.getElementById('avn-galeria-dialog') as HTMLDialogElement | null;
+
+  if (dataEl && dialog) {
+    const items: GaleriaItem[] = JSON.parse(dataEl.textContent || '[]');
+    const bySlug = new Map(items.map((item) => [item.slug, item]));
+
+    const titleEl = document.getElementById('galeria-titulo');
+    const capEl = document.getElementById('galeria-capacidad');
+    const imgEl = document.getElementById('galeria-imagen') as HTMLImageElement | null;
+    const placeholderEl = document.getElementById('galeria-placeholder');
+    const placeholderTagEl = document.getElementById('galeria-placeholder-tag');
+    const controlesEl = document.getElementById('galeria-controles');
+    const contadorEl = document.getElementById('galeria-contador');
+    const prevBtn = document.getElementById('galeria-prev') as HTMLButtonElement | null;
+    const nextBtn = document.getElementById('galeria-next') as HTMLButtonElement | null;
+    const closeBtn = document.getElementById('galeria-cerrar') as HTMLButtonElement | null;
+
+    let currentItem: GaleriaItem | null = null;
+    let currentIndex = 0;
+
+    function renderSlide() {
+      if (!currentItem || !imgEl || !placeholderEl || !placeholderTagEl || !controlesEl || !contadorEl || !prevBtn || !nextBtn) {
+        return;
+      }
+
+      const fotos = currentItem.fotos;
+      if (fotos.length === 0) {
+        imgEl.classList.add('hidden');
+        imgEl.removeAttribute('src');
+        placeholderEl.classList.remove('hidden');
+        placeholderEl.classList.add('flex');
+        placeholderTagEl.textContent = `FOTO PENDIENTE – ${currentItem.slug}`;
+        controlesEl.classList.add('hidden');
+        return;
+      }
+
+      const foto = fotos[currentIndex];
+      placeholderEl.classList.add('hidden');
+      placeholderEl.classList.remove('flex');
+      imgEl.src = foto.src;
+      imgEl.alt = foto.alt;
+      imgEl.classList.remove('hidden');
+
+      if (fotos.length > 1) {
+        controlesEl.classList.remove('hidden');
+        contadorEl.textContent = `${currentIndex + 1} / ${fotos.length}`;
+        prevBtn.disabled = false;
+        nextBtn.disabled = false;
+      } else {
+        controlesEl.classList.add('hidden');
+      }
+    }
+
+    function openGaleria(slug: string) {
+      const item = bySlug.get(slug);
+      if (!item || !titleEl || !capEl) return;
+
+      currentItem = item;
+      currentIndex = 0;
+      titleEl.textContent = item.nombre;
+      capEl.textContent = item.capacidad;
+      renderSlide();
+      dialog.showModal();
+      closeBtn?.focus();
+    }
+
+    function step(delta: number) {
+      if (!currentItem || currentItem.fotos.length <= 1) return;
+      const len = currentItem.fotos.length;
+      currentIndex = (currentIndex + delta + len) % len;
+      renderSlide();
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-open-galeria]').forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        const slug = trigger.getAttribute('data-open-galeria');
+        if (slug) openGaleria(slug);
+      });
+    });
+
+    closeBtn?.addEventListener('click', () => dialog.close());
+    prevBtn?.addEventListener('click', () => step(-1));
+    nextBtn?.addEventListener('click', () => step(1));
+
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        step(-1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        step(1);
+      }
+    });
+  }
+</script>
