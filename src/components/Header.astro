@@ -9,7 +9,7 @@ import { ASILOS, WHATSAPP_URL } from '../data/alojamientos';
       <LogoAvn compact />
     </a>
 
-    <nav aria-label="Navegación principal" class="flex items-center gap-4 sm:gap-6">
+    <nav aria-label="Navegación principal" class="hidden items-center gap-6 md:flex">
       {
         ASILOS.map((asilo) => (
           <a
@@ -24,10 +24,111 @@ import { ASILOS, WHATSAPP_URL } from '../data/alojamientos';
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
-        class="hidden rounded-[10px] border border-[var(--border-soft)] bg-terracotta px-4 py-2 text-sm font-semibold text-cream hover:bg-terracotta-h md:inline-flex"
+        class="inline-flex rounded-[10px] border border-[var(--border-soft)] bg-terracotta px-4 py-2 text-sm font-semibold text-cream hover:bg-terracotta-h"
       >
         Consultar
       </a>
     </nav>
+
+    <button
+      type="button"
+      id="mobile-menu-toggle"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      aria-label="Abrir menú de navegación"
+      class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-surface text-cream hover:border-sand md:hidden"
+    >
+      <svg
+        id="mobile-menu-icon-open"
+        class="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      <svg
+        id="mobile-menu-icon-close"
+        class="hidden h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
   </div>
+
+  <nav
+    id="mobile-menu"
+    aria-label="Menú móvil"
+    class="hidden border-t border-[var(--border-soft)] bg-bg-deep px-4 py-4 md:hidden"
+  >
+    <ul class="flex flex-col gap-2">
+      {
+        ASILOS.map((asilo) => (
+          <li>
+            <a
+              href={`/asilos/${asilo.slug}`}
+              class="block rounded-[10px] px-3 py-2.5 text-base font-medium text-sand hover:bg-surface hover:text-cream"
+            >
+              {asilo.nombre}
+            </a>
+          </li>
+        ))
+      }
+      <li class="pt-2">
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary w-full text-center"
+        >
+          Consultar por WhatsApp
+        </a>
+      </li>
+    </ul>
+  </nav>
 </header>
+
+<script>
+  const toggleBtn = document.getElementById('mobile-menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const openIcon = document.getElementById('mobile-menu-icon-open');
+  const closeIcon = document.getElementById('mobile-menu-icon-close');
+
+  function setMenuOpen(open: boolean) {
+    if (!toggleBtn || !mobileMenu || !openIcon || !closeIcon) return;
+    toggleBtn.setAttribute('aria-expanded', String(open));
+    toggleBtn.setAttribute(
+      'aria-label',
+      open ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'
+    );
+    mobileMenu.classList.toggle('hidden', !open);
+    openIcon.classList.toggle('hidden', open);
+    closeIcon.classList.toggle('hidden', !open);
+  }
+
+  toggleBtn?.addEventListener('click', () => {
+    const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+    setMenuOpen(!isOpen);
+  });
+
+  mobileMenu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => setMenuOpen(false));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (
+      event.key === 'Escape' &&
+      toggleBtn?.getAttribute('aria-expanded') === 'true'
+    ) {
+      setMenuOpen(false);
+      toggleBtn.focus();
+    }
+  });
+</script>

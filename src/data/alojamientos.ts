@@ -13,6 +13,8 @@ export interface Alojamiento {
 export interface AsiloGrupo {
   slug: 'asilomar' | 'asiloparque' | 'asilocentro';
   nombre: string;
+  tipo: string;
+  capacidadResumen: string;
   zona: string;
   ubicacionDetalle: string;
   unidadesSlugs: Alojamiento['slug'][];
@@ -89,20 +91,26 @@ export const ASILOS: AsiloGrupo[] = [
   {
     slug: 'asilomar',
     nombre: 'AsiloMar',
+    tipo: 'Dúplex',
+    capacidadResumen: '4 personas',
     zona: 'Villa del Deportista, Necochea',
-    ubicacionDetalle: 'Cabañas en Villa del Deportista, Necochea.',
+    ubicacionDetalle: 'Dúplex en Villa del Deportista, Necochea.',
     unidadesSlugs: ['asilomar-1', 'asilomar-2'],
   },
   {
     slug: 'asiloparque',
     nombre: 'AsiloParque',
+    tipo: 'Dúplex',
+    capacidadResumen: '3 personas',
     zona: 'Villa del Deportista, Necochea',
-    ubicacionDetalle: 'Cabañas en Villa del Deportista, Necochea.',
+    ubicacionDetalle: 'Dúplex en Villa del Deportista, Necochea.',
     unidadesSlugs: ['asiloparque-1', 'asiloparque-2'],
   },
   {
     slug: 'asilocentro',
     nombre: 'AsiloCentro',
+    tipo: 'Departamento',
+    capacidadResumen: '4 personas',
     zona: 'Zona céntrica, Necochea',
     ubicacionDetalle: 'Depto en zona céntrica para 4/5 personas, Necochea.',
     unidadesSlugs: ['asilocentro'],

@@ -68,16 +68,16 @@ const detailHref = `/asilos/${asilo.slug}`;
         </h2>
         <span class="label-kicker mt-2 block">{asilo.zona}</span>
 
-        <ul class="mt-6 space-y-2.5 border-y border-[var(--border-soft)] py-5">
-          {
-            unidades.map((unidad) => (
-              <li class="flex items-baseline justify-between gap-4 text-base">
-                <span class="font-medium text-cream">{unidad.nombre}</span>
-                <span class="label-kicker">{unidad.capacidad}</span>
-              </li>
-            ))
-          }
-        </ul>
+        <div class="mt-5 space-y-2.5 border-y border-[var(--border-soft)] py-4">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="text-sm font-medium text-cream">Tipo</span>
+            <span class="label-kicker">{asilo.tipo}</span>
+          </div>
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="text-sm font-medium text-cream">Capacidad</span>
+            <span class="label-kicker">{asilo.capacidadResumen}</span>
+          </div>
+        </div>
 
         <p class="mt-5 text-sm leading-relaxed text-sand">
           {asilo.ubicacionDetalle}
