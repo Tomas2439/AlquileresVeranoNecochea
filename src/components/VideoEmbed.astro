@@ -6,52 +6,106 @@ interface Props {
 
 const { url, title } = Astro.props;
 
-function toEmbedUrl(rawUrl: string): string | null {
+function parseVideoSource(rawUrl: string): {
+  type: 'iframe' | 'file';
+  src: string;
+} | null {
+  if (!rawUrl) return null;
+
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(rawUrl) || rawUrl.startsWith('/')) {
+    return { type: 'file', src: rawUrl };
+  }
+
   try {
     const parsed = new URL(rawUrl);
+
     if (parsed.hostname.includes('youtube.com')) {
-      const id = parsed.searchParams.get('v');
-      return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1` : null;
+      const vId = parsed.searchParams.get('v');
+      if (vId) {
+        return {
+          type: 'iframe',
+          src: `https://www.youtube-nocookie.com/embed/${vId}?autoplay=1`,
+        };
+      }
+      const shortsMatch = parsed.pathname.match(/\/shorts\/([^/?]+)/);
+      if (shortsMatch?.[1]) {
+        return {
+          type: 'iframe',
+          src: `https://www.youtube-nocookie.com/embed/${shortsMatch[1]}?autoplay=1`,
+        };
+      }
     }
+
     if (parsed.hostname === 'youtu.be') {
-      const id = parsed.pathname.slice(1);
-      return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1` : null;
+      const id = parsed.pathname.slice(1).split('/')[0];
+      if (id) {
+        return {
+          type: 'iframe',
+          src: `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`,
+        };
+      }
     }
+
     if (parsed.hostname.includes('vimeo.com')) {
       const id = parsed.pathname.split('/').filter(Boolean).pop();
-      return id ? `https://player.vimeo.com/video/${id}?autoplay=1` : null;
+      if (id) {
+        return {
+          type: 'iframe',
+          src: `https://player.vimeo.com/video/${id}?autoplay=1`,
+        };
+      }
     }
   } catch {
     return null;
   }
+
   return null;
 }
 
-const embedUrl = toEmbedUrl(url);
+const videoSource = parseVideoSource(url);
 ---
 
 {
-  embedUrl && (
-    <div
-      data-video-embed={embedUrl}
-      data-video-title={title}
-      class="relative aspect-video w-full overflow-hidden rounded-[12px] border border-[var(--border-soft)] bg-surface"
-    >
-      <button
-        type="button"
-        data-video-trigger
-        aria-label={`Reproducir video: ${title}`}
-        class="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3 bg-bg-deep/80 p-6 text-cream hover:bg-bg-deep"
+  videoSource &&
+    (videoSource.type === 'file' ? (
+      <div class="overflow-hidden rounded-[12px] border border-border bg-surface shadow-[var(--shadow-warm)]">
+        <video
+          controls
+          preload="metadata"
+          playsinline
+          class="aspect-video w-full bg-dark object-contain"
+          aria-label={title}
+        >
+          <source src={videoSource.src} />
+          Tu navegador no soporta la reproducción de video.
+        </video>
+        <p class="border-t border-border px-4 py-2.5 text-sm font-medium text-text">
+          {title}
+        </p>
+      </div>
+    ) : (
+      <div
+        data-video-embed={videoSource.src}
+        data-video-title={title}
+        class="relative aspect-video w-full overflow-hidden rounded-[12px] border border-border bg-surface shadow-[var(--shadow-warm)]"
       >
-        <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-cream shadow-[var(--shadow-warm)]">
-          <svg class="ml-0.5 h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </span>
-        <span class="text-sm font-medium text-sand">{title}</span>
-      </button>
-    </div>
-  )
+        <button
+          type="button"
+          data-video-trigger
+          aria-label={`Reproducir video: ${title}`}
+          class="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3 p-6 text-text hover:text-accent"
+          style="background: var(--photo-fallback);"
+        >
+          <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[var(--shadow-warm)]">
+            <svg class="ml-0.5 h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+          <span class="text-sm font-semibold text-text">{title}</span>
+          <span class="text-sm text-text-muted">Tocar para reproducir el video</span>
+        </button>
+      </div>
+    ))
 }
 
 <script>

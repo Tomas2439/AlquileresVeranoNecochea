@@ -1,20 +1,27 @@
 ---
-import { WHATSAPP_URL } from '../data/alojamientos';
+import { getWhatsappUnitUrl } from '../data/alojamientos';
+
+interface Props {
+  unidadNombre?: string;
+}
+
+const { unidadNombre } = Astro.props;
+const whatsappHref = getWhatsappUnitUrl(unidadNombre);
 ---
 
 <a
-  href={WHATSAPP_URL}
+  href={whatsappHref}
   target="_blank"
   rel="noopener noreferrer"
-  aria-label="Consultar por WhatsApp"
-  class="fixed right-4 bottom-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-soft)] bg-terracotta text-cream shadow-[var(--shadow-warm)] hover:bg-terracotta-h md:hidden"
+  aria-label={unidadNombre ? `Consultar por ${unidadNombre} en WhatsApp` : 'Consultar por WhatsApp'}
+  class="fixed right-4 bottom-5 z-40 inline-flex h-13 w-13 items-center justify-center rounded-full bg-cta text-white shadow-[var(--shadow-warm)] hover:bg-cta-hover md:hidden"
 >
   <svg
-    class="h-7 w-7"
+    class="h-6 w-6"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="1.8"
+    stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"

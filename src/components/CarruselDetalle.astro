@@ -1,0 +1,451 @@
+---
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Alojamiento, ZonaSlug } from '../data/alojamientos';
+import { getFolderImages, getFolderVideos } from '../utils/media';
+
+interface Props {
+  unidad: Alojamiento;
+  zonaSlug: ZonaSlug;
+}
+
+const { unidad, zonaSlug } = Astro.props;
+const rawImages = getFolderImages(unidad.slug);
+const folderVideos = getFolderVideos(unidad.slug);
+const posterTime = unidad.videoPosterTime ?? 1.5;
+
+const fallbackAlts = [
+  `Vista exterior principal de ${unidad.nombre}`,
+  `Ambiente interior y estar de ${unidad.nombre}`,
+  `Sector de cocina y comedor de ${unidad.nombre}`,
+  `Dormitorio equipado de ${unidad.nombre}`,
+  `Detalle de ambientes en ${unidad.nombre}`,
+  `Equipamiento interior de ${unidad.nombre}`,
+  `Espacio exterior de ${unidad.nombre}`,
+  `Vista general de ${unidad.nombre}`,
+];
+
+interface PhotoSlide {
+  type: 'photo';
+  image: ImageMetadata;
+  thumbSrc: string;
+  alt: string;
+  photoIndex: number;
+  isPortrait: boolean;
+}
+
+interface VideoSlide {
+  type: 'video';
+  videoUrl: string;
+  alt: string;
+}
+
+type CarouselSlide = PhotoSlide | VideoSlide;
+
+const photoSlides: PhotoSlide[] = await Promise.all(
+  rawImages.map(async (img, idx) => {
+    const thumb = await getImage({ src: img, width: 240, format: 'webp' });
+    return {
+      type: 'photo',
+      image: img,
+      thumbSrc: thumb.src,
+      alt: unidad.fotosAlt[idx] ?? fallbackAlts[idx] ?? `Ambiente de ${unidad.nombre}`,
+      photoIndex: idx,
+      isPortrait: img.height > img.width,
+    };
+  })
+);
+
+const allVideoSources = [
+  ...folderVideos.map((url) => ({
+    url,
+    titulo: `Recorrido en video de ${unidad.nombre}`,
+  })),
+  ...(unidad.videos ?? []),
+];
+
+const videoSlides: VideoSlide[] = allVideoSources.map((v) => ({
+  type: 'video',
+  videoUrl: v.url,
+  alt: v.titulo,
+}));
+
+const slides: CarouselSlide[] = unidad.videoAlInicio
+  ? [...videoSlides, ...photoSlides]
+  : [...photoSlides, ...videoSlides];
+
+const hasMultiple = slides.length > 1;
+---
+
+<div
+  id="avn-carrusel-detalle"
+  role="region"
+  aria-roledescription="carrusel"
+  aria-label={`Fotos y video de ${unidad.nombre}`}
+  tabindex="0"
+  class="w-full max-w-[720px] outline-none"
+>
+  {
+    slides.length > 0 ? (
+      <>
+        <!-- Visor 4:3 definido por el ancho (full-bleed en mobile <1024px, bordes redondeados en desktop >=1024px) -->
+        <div class="relative">
+          <!-- Botón circular de retorno superpuesto (<1024px, 44x44px) -->
+          <a
+            href={`/#${zonaSlug}`}
+            aria-label="Volver a alojamientos"
+            class="absolute top-3 left-3 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full bg-dark/85 text-dark-text shadow-md hover:bg-dark lg:hidden"
+          >
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+            </svg>
+          </a>
+
+          <!-- Contador "n / total" en la esquina superior derecha para no tapar controles de video -->
+          <span
+            id="carrusel-contador"
+            aria-live="polite"
+            class="pointer-events-none absolute top-3 right-3 z-30 inline-flex min-w-[3.75rem] items-center justify-center rounded-full bg-dark/85 px-3 py-1 text-center text-sm font-medium whitespace-nowrap text-dark-text shadow-sm"
+          >
+            1 / {slides.length}
+          </span>
+
+          <div
+            id="carrusel-track"
+            class="flex w-full snap-x snap-mandatory overflow-x-auto scroll-smooth bg-dark [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-hidden lg:rounded-[12px] lg:border lg:border-border lg:shadow-[var(--shadow-warm)]"
+          >
+            {slides.map((slide, idx) => (
+              <div
+                data-carousel-slide={idx}
+                data-slide-type={slide.type}
+                class="relative aspect-[4/3] w-full shrink-0 snap-start overflow-hidden bg-dark"
+              >
+                {slide.type === 'photo' ? (
+                  <button
+                    type="button"
+                    data-open-galeria={unidad.slug}
+                    data-photo-index={slide.photoIndex}
+                    aria-label={`Ver en pantalla completa: ${slide.alt}`}
+                    class="group relative flex h-full w-full cursor-pointer items-center justify-center overflow-hidden bg-dark"
+                  >
+                    <!-- Fondo desenfocado para fotos verticales -->
+                    <img
+                      data-blur-backdrop
+                      src={slide.thumbSrc}
+                      alt=""
+                      aria-hidden="true"
+                      loading={idx === 0 ? 'eager' : 'lazy'}
+                      style="filter: blur(24px); transform: scale(1.2); opacity: 0.6;"
+                      class={`pointer-events-none absolute inset-0 h-full w-full object-cover ${
+                        slide.isPortrait ? 'block' : 'hidden'
+                      }`}
+                    />
+
+                    <Image
+                      data-carousel-photo
+                      src={slide.image}
+                      alt={slide.alt}
+                      loading={idx === 0 ? 'eager' : 'lazy'}
+                      widths={[640, 1024, 1440]}
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                      class={`relative z-10 h-full w-full ${
+                        slide.isPortrait ? 'object-contain' : 'object-cover'
+                      }`}
+                    />
+                  </button>
+                ) : (
+                  <div class="relative flex h-full w-full items-center justify-center overflow-hidden bg-dark">
+                    <!-- Fondo desenfocado tomado del propio cuadro del video -->
+                    <video
+                      src={`${slide.videoUrl}#t=${posterTime}`}
+                      muted
+                      playsinline
+                      preload="metadata"
+                      aria-hidden="true"
+                      style="filter: blur(24px); transform: scale(1.2); opacity: 0.55;"
+                      class="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                    />
+
+                    <!-- Sin atributo controls inicial para no duplicar play nativo con el play central -->
+                    <video
+                      data-carousel-video
+                      src={`${slide.videoUrl}#t=${posterTime}`}
+                      preload="metadata"
+                      playsinline
+                      aria-label={slide.alt}
+                      class="relative z-10 h-full w-full object-contain"
+                    >
+                      Tu navegador no soporta la reproducción de video.
+                    </video>
+
+                    <button
+                      type="button"
+                      data-video-play-overlay
+                      aria-label={`Reproducir ${slide.alt}`}
+                      class="absolute inset-0 z-20 flex cursor-pointer items-center justify-center bg-black/25 text-white transition-opacity hover:bg-black/35"
+                    >
+                      <span class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-lg">
+                        <svg class="ml-1 h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {hasMultiple && (
+            <>
+              <button
+                type="button"
+                id="carrusel-prev"
+                aria-label="Foto anterior"
+                class="absolute top-1/2 left-3 z-30 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-surface/95 text-text shadow-md hover:border-accent hover:text-accent lg:inline-flex"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                id="carrusel-next"
+                aria-label="Foto siguiente"
+                class="absolute top-1/2 right-3 z-30 hidden h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-surface/95 text-text shadow-md hover:border-accent hover:text-accent lg:inline-flex"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {hasMultiple && (
+          <div
+            class="mt-3 hidden items-center gap-2.5 overflow-x-auto pb-1 lg:flex"
+            role="group"
+            aria-label="Miniaturas de la galería"
+          >
+            {slides.map((slide, idx) => (
+              <button
+                type="button"
+                data-carousel-thumb={idx}
+                aria-label={
+                  slide.type === 'video'
+                    ? `Ver video (${idx + 1} de ${slides.length})`
+                    : `Ver foto ${idx + 1} de ${slides.length}: ${slide.alt}`
+                }
+                aria-current={idx === 0 ? 'true' : 'false'}
+                class={`relative aspect-[4/3] h-16 shrink-0 cursor-pointer overflow-hidden rounded-[8px] border-2 bg-dark ${
+                  idx === 0
+                    ? 'border-accent ring-2 ring-accent/30'
+                    : 'border-transparent opacity-70 hover:opacity-100'
+                }`}
+              >
+                {slide.type === 'photo' ? (
+                  <img
+                    src={slide.thumbSrc}
+                    alt=""
+                    loading="lazy"
+                    class="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div class="relative flex h-full w-full items-center justify-center bg-dark">
+                    <!-- Miniatura tomada de un cuadro del propio video, no de la foto exterior -->
+                    <video
+                      src={`${slide.videoUrl}#t=${posterTime}`}
+                      muted
+                      playsinline
+                      preload="metadata"
+                      class="h-full w-full object-cover opacity-80"
+                    />
+                    <span class="absolute inset-0 flex items-center justify-center bg-black/25">
+                      <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+                        <svg class="ml-0.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </>
+    ) : (
+      <div
+        class="flex aspect-[4/3] w-full flex-col items-center justify-center p-6 text-center lg:rounded-[12px] lg:border lg:border-border"
+        style="background: var(--photo-fallback);"
+      >
+        <p class="font-serif text-2xl font-medium text-text">{unidad.nombre}</p>
+        <p class="mt-2 max-w-md text-sm text-text-muted">
+          Las fotos y el video de esta unidad se incorporarán próximamente.
+        </p>
+      </div>
+    )
+  }
+</div>
+
+<script>
+  const root = document.getElementById('avn-carrusel-detalle');
+  const track = document.getElementById('carrusel-track');
+  const counterEl = document.getElementById('carrusel-contador');
+  const prevBtn = document.getElementById('carrusel-prev');
+  const nextBtn = document.getElementById('carrusel-next');
+
+  if (root && track) {
+    const slideEls = Array.from(
+      track.querySelectorAll<HTMLElement>('[data-carousel-slide]')
+    );
+    const thumbEls = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-carousel-thumb]')
+    );
+
+    // Detección runtime adicional (naturalWidth < naturalHeight) para fotos verticales
+    slideEls.forEach((slideEl) => {
+      const img = slideEl.querySelector<HTMLImageElement>('[data-carousel-photo]');
+      const backdrop = slideEl.querySelector<HTMLImageElement>('[data-blur-backdrop]');
+      if (!img || !backdrop) return;
+
+      function checkOrientation() {
+        if (!img || !backdrop || !img.naturalWidth || !img.naturalHeight) return;
+        const isVertical = img.naturalWidth < img.naturalHeight;
+        img.classList.toggle('object-contain', isVertical);
+        img.classList.toggle('object-cover', !isVertical);
+        backdrop.classList.toggle('block', isVertical);
+        backdrop.classList.toggle('hidden', !isVertical);
+      }
+
+      if (img.complete) {
+        checkOrientation();
+      } else {
+        img.addEventListener('load', checkOrientation, { once: true });
+      }
+    });
+
+    let activeIndex = 0;
+    const total = slideEls.length;
+
+    function resetVideosExcept(keepIndex?: number) {
+      slideEls.forEach((slideEl, idx) => {
+        if (idx === keepIndex) return;
+        const vid = slideEl.querySelector<HTMLVideoElement>('[data-carousel-video]');
+        const overlay = slideEl.querySelector<HTMLButtonElement>('[data-video-play-overlay]');
+        if (vid) {
+          if (!vid.paused) vid.pause();
+          vid.controls = false;
+        }
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      });
+    }
+
+    function updateIndicators(index: number) {
+      if (index === activeIndex && counterEl?.dataset.initialized === 'true') return;
+      resetVideosExcept(index);
+      activeIndex = index;
+
+      if (counterEl) {
+        counterEl.dataset.initialized = 'true';
+        counterEl.textContent = `${activeIndex + 1} / ${total}`;
+      }
+
+      thumbEls.forEach((btn, idx) => {
+        const isCurrent = idx === activeIndex;
+        btn.setAttribute('aria-current', String(isCurrent));
+        btn.classList.toggle('border-accent', isCurrent);
+        btn.classList.toggle('ring-2', isCurrent);
+        btn.classList.toggle('ring-accent/30', isCurrent);
+        btn.classList.toggle('border-transparent', !isCurrent);
+        btn.classList.toggle('opacity-70', !isCurrent);
+      });
+    }
+
+    function scrollToSlide(targetIndex: number) {
+      if (total <= 1 || !track) return;
+      const nextIdx = (targetIndex + total) % total;
+      const targetEl = slideEls[nextIdx];
+      if (!targetEl) return;
+
+      updateIndicators(nextIdx);
+      track.scrollTo({
+        left: targetEl.offsetLeft,
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'auto'
+          : 'smooth',
+      });
+    }
+
+    if ('IntersectionObserver' in window && total > 1) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const idx = Number(
+                (entry.target as HTMLElement).getAttribute('data-carousel-slide')
+              );
+              if (!Number.isNaN(idx)) {
+                updateIndicators(idx);
+              }
+            }
+          }
+        },
+        { root: track, threshold: 0.6 }
+      );
+
+      slideEls.forEach((el) => observer.observe(el));
+    }
+
+    prevBtn?.addEventListener('click', () => scrollToSlide(activeIndex - 1));
+    nextBtn?.addEventListener('click', () => scrollToSlide(activeIndex + 1));
+
+    thumbEls.forEach((btn, idx) => {
+      btn.addEventListener('click', () => scrollToSlide(idx));
+    });
+
+    root.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        scrollToSlide(activeIndex - 1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        scrollToSlide(activeIndex + 1);
+      }
+    });
+
+    // Al iniciar el video se oculta el play central y se activan los controles nativos (nunca ambos a la vez)
+    slideEls.forEach((slideEl) => {
+      const video = slideEl.querySelector<HTMLVideoElement>('[data-carousel-video]');
+      const overlay = slideEl.querySelector<HTMLButtonElement>('[data-video-play-overlay]');
+      if (!video || !overlay) return;
+
+      overlay.addEventListener('click', () => {
+        overlay.style.display = 'none';
+        video.controls = true;
+        video.play();
+      });
+
+      video.addEventListener('play', () => {
+        overlay.style.display = 'none';
+        video.controls = true;
+      });
+
+      video.addEventListener('ended', () => {
+        video.controls = false;
+        overlay.style.display = 'flex';
+      });
+    });
+  }
+</script>

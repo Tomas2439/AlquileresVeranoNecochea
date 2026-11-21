@@ -1,27 +1,56 @@
 ---
-import { ALOJAMIENTOS } from '../data/alojamientos';
+import { getUnidadesByZona, ZONAS } from '../data/alojamientos';
 import AlojamientoCard from './AlojamientoCard.astro';
-import Galeria from './Galeria.astro';
 ---
 
-<section id="alojamientos" class="py-16 sm:py-24">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-    <div class="max-w-xl">
+<section id="alojamientos" class="pt-12 sm:pt-16">
+  <div class="mx-auto max-w-6xl px-4 pb-8 sm:px-6 lg:px-8">
+    <div class="max-w-2xl">
       <h2
-        class="font-serif font-medium tracking-[-0.015em] text-cream"
+        class="font-serif font-medium tracking-[-0.015em] text-text"
         style="font-size: var(--text-h2); line-height: 1.1;"
       >
-        Nuestros alojamientos
+        Alojamientos por zona
       </h2>
-      <p class="mt-3 text-base leading-relaxed text-sand">
-        Tocá cualquier foto para ver la galería de cada espacio.
+      <p class="mt-3 text-base leading-relaxed text-text-muted">
+        Cinco unidades independientes distribuidas en tres sectores distintos de Necochea.
       </p>
-    </div>
-
-    <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {ALOJAMIENTOS.map((alojamiento) => <AlojamientoCard alojamiento={alojamiento} />)}
     </div>
   </div>
 
-  <Galeria />
+  {
+    ZONAS.map((zona, idx) => {
+      const unidades = getUnidadesByZona(zona.slug);
+      const isAltBand = idx % 2 === 1;
+      const isSingleHorizontal = unidades.length === 1;
+
+      return (
+        <div
+          id={zona.slug}
+          class={`scroll-mt-16 py-10 sm:py-14 ${isAltBand ? 'bg-bg-alt' : 'bg-bg'}`}
+        >
+          <div class="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col justify-between gap-2 border-b border-border pb-4 sm:flex-row sm:items-baseline">
+              <h3 class="font-serif text-3xl font-semibold text-text">
+                {zona.tituloSeccion}
+              </h3>
+              <p class="text-sm font-medium text-text-muted sm:text-right">
+                {zona.resumenUbicacion}
+              </p>
+            </div>
+
+            {isSingleHorizontal ? (
+              <AlojamientoCard unidad={unidades[0]} layout="horizontal" />
+            ) : (
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {unidades.map((unidad) => (
+                  <AlojamientoCard unidad={unidad} layout="vertical" />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    })
+  }
 </section>

@@ -1,0 +1,292 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import CarruselDetalle from '../../components/CarruselDetalle.astro';
+import Galeria from '../../components/Galeria.astro';
+import Footer from '../../components/Footer.astro';
+import ServicioIcon from '../../components/ServicioIcon.astro';
+import {
+  ALOJAMIENTOS,
+  getUnidadBySlug,
+  getWhatsappUnitUrl,
+  getZonaBySlug,
+  type Alojamiento,
+} from '../../data/alojamientos';
+import { getFolderImages } from '../../utils/media';
+
+export function getStaticPaths() {
+  return ALOJAMIENTOS.map((unidad) => ({
+    params: { slug: unidad.slug },
+    props: { unidad },
+  }));
+}
+
+interface Props {
+  unidad: Alojamiento;
+}
+
+const { unidad } = Astro.props;
+const zona = getZonaBySlug(unidad.zonaSlug);
+const hermana = unidad.hermanaSlug ? getUnidadBySlug(unidad.hermanaSlug) : undefined;
+const hermanaCover = hermana ? getFolderImages(hermana.slug)[0] : undefined;
+const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
+---
+
+<Layout
+  title={`${unidad.nombre} (${unidad.tipo}) | AVN – Alquiler de verano en Necochea`}
+  description={`${unidad.tipo} ${unidad.nombre} para ${unidad.capacidad} en Necochea. ${unidad.diferencial}`}
+>
+  <Header />
+
+  <main
+    id="contenido-principal"
+    class="pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0"
+  >
+    <!-- En desktop (>=1024px): migas de pan compactas arriba y layout de 2 columnas (galería 60% izq, info sticky der).
+         Bajo 1024px: 1 sola columna con galería full-bleed arriba e info debajo. -->
+    <section class="border-b border-border lg:py-6">
+      <div class="mx-auto max-w-6xl px-0 lg:px-8">
+        <!-- Migas de pan visibles en desktop (>=1024px) -->
+        <nav
+          aria-label="Migas de pan"
+          class="mb-4 hidden flex-nowrap items-center gap-1.5 overflow-x-auto text-sm whitespace-nowrap lg:flex"
+        >
+          <a
+            href={`/#${zona.slug}`}
+            class="inline-flex min-h-[36px] items-center gap-1.5 font-medium text-accent hover:text-text"
+          >
+            <svg
+              class="h-4 w-4 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+            </svg>
+            <span>Alojamientos</span>
+          </a>
+          <span class="text-text-muted" aria-hidden="true">›</span>
+          <a
+            href={`/#${zona.slug}`}
+            class="inline-flex min-h-[36px] items-center font-medium text-accent hover:text-text"
+          >
+            {zona.nombre}
+          </a>
+          <span class="text-text-muted" aria-hidden="true">›</span>
+          <span class="font-medium text-text" aria-current="page">
+            {unidad.nombre}
+          </span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 lg:items-start lg:gap-10">
+          <!-- Columna izquierda (~60%, max-w-720px): Galería 4:3 -->
+          <div class="lg:col-span-7">
+            <CarruselDetalle unidad={unidad} zonaSlug={zona.slug} />
+          </div>
+
+          <!-- Columna derecha (~40%, sticky en desktop): Título, datos, descripción, servicios, horarios y CTA -->
+          <div class="px-4 py-5 sm:px-6 lg:sticky lg:top-20 lg:col-span-5 lg:px-0 lg:py-0">
+            <h1
+              class="font-serif font-medium tracking-[-0.02em] text-text"
+              style="font-size: clamp(2rem, 3.5vw, 2.75rem); line-height: 1.08;"
+            >
+              {unidad.nombre}
+            </h1>
+            <p class="mt-1.5 text-sm font-medium text-accent">
+              {unidad.tipo} · {unidad.capacidad} · {zona.etiquetaCorta}
+            </p>
+            <p class="mt-2.5 line-clamp-2 text-base leading-relaxed text-text-muted">
+              {unidad.diferencial}
+            </p>
+
+            <!-- Botón de consulta en desktop (>=1024px); bajo 1024px va en la barra fija inferior -->
+            <div class="mt-5 hidden lg:block">
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-whatsapp w-full text-center"
+              >
+                Consultar por {unidad.nombre}
+              </a>
+            </div>
+
+            <!-- Servicios: grilla de 2 columnas, solo ícono y texto -->
+            <div class="mt-6 border-t border-border pt-5">
+              <h2 class="sr-only">Servicios y horarios</h2>
+              <ul class="grid grid-cols-2 gap-x-4 gap-y-3">
+                {
+                  unidad.servicios.map((servicio) => (
+                    <li class="flex items-center gap-2.5 text-sm font-medium text-text">
+                      <ServicioIcon icono={servicio.icono} />
+                      <span>{servicio.texto}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+
+            <!-- Check-in / Check-out: dos columnas lado a lado con hora en serif grande -->
+            <div class="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-5">
+              <div>
+                <p class="text-sm font-medium whitespace-nowrap text-text-muted">
+                  Check-in
+                </p>
+                <p class="mt-0.5 font-serif text-3xl font-semibold whitespace-nowrap text-text">
+                  14:00 hs
+                </p>
+                <p class="mt-0.5 text-sm text-text-muted">
+                  Horario de ingreso
+                </p>
+              </div>
+
+              <div>
+                <p class="text-sm font-medium whitespace-nowrap text-text-muted">
+                  Check-out
+                </p>
+                <p class="mt-0.5 font-serif text-3xl font-semibold whitespace-nowrap text-text">
+                  10:00 hs
+                </p>
+                <p class="mt-0.5 text-sm text-text-muted">
+                  Horario de egreso
+                </p>
+              </div>
+            </div>
+
+            {
+              hermana && (
+                <div class="mt-6 border-t border-border pt-5">
+                  <p class="mb-2 text-sm font-medium text-text-muted">
+                    En la misma zona
+                  </p>
+                  <a
+                    href={`/alojamientos/${hermana.slug}`}
+                    class="group flex min-h-[44px] items-center gap-3.5 rounded-[12px] border border-border bg-surface p-2.5 hover:border-accent"
+                  >
+                    <div class="relative aspect-[4/3] h-14 shrink-0 overflow-hidden rounded-[8px] border border-border bg-bg">
+                      {hermanaCover ? (
+                        <Image
+                          src={hermanaCover}
+                          alt={`Vista de ${hermana.nombre}`}
+                          loading="lazy"
+                          widths={[160]}
+                          sizes="80px"
+                          class="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          class="h-full w-full"
+                          style="background: var(--photo-fallback);"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate font-serif text-lg font-semibold text-text group-hover:text-accent">
+                        Ver también {hermana.nombre}
+                      </p>
+                      <p class="text-sm text-text-muted">
+                        {hermana.tipo} · {hermana.capacidad}
+                      </p>
+                    </div>
+
+                    <svg
+                      class="h-5 w-5 shrink-0 text-accent"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
+                    </svg>
+                  </a>
+                </div>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mini-ubicación debajo -->
+    <section class="py-10 sm:py-14">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-[12px] border border-border bg-surface p-6 sm:p-8">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
+            <div class="lg:col-span-5">
+              <h2
+                class="font-serif font-medium text-text"
+                style="font-size: var(--text-h2); line-height: 1.1;"
+              >
+                Ubicación de {zona.nombre}
+              </h2>
+              <p class="mt-2 text-sm text-text-muted">{zona.barrio}</p>
+              {zona.distanciaMar && (
+                <p class="mt-1 text-sm text-text-muted">{zona.distanciaMar}</p>
+              )}
+
+              {zona.referencias.length > 0 && (
+                <ul class="mt-4 flex flex-wrap gap-2">
+                  {zona.referencias.map((ref) => (
+                    <li class="rounded-[8px] border border-border bg-bg px-2.5 py-1 text-sm text-text-muted">
+                      {ref}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div class="relative h-56 overflow-hidden rounded-[10px] border border-border bg-bg lg:col-span-7">
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="xMidYMid slice"
+                class="h-full w-full"
+                role="img"
+                aria-label={`Ubicación aproximada de ${unidad.nombre} en Necochea`}
+              >
+                <rect width="100" height="100" fill="#F3E9D8" />
+                <path d="M12 20 Q38 14 55 32 Q50 56 26 58 Q8 46 12 20 Z" fill="#DDE6D5" />
+                <path d="M0 78 Q35 68 65 56 T100 44 L100 100 L0 100 Z" fill="#E8DAC3" />
+                <path d="M0 84 Q35 74 65 62 T100 50 L100 100 L0 100 Z" fill="#C7DCE0" />
+              </svg>
+
+              <div
+                style={`left: ${zona.mapPin.x}%; top: ${zona.mapPin.y}%;`}
+                class="absolute -translate-x-1/2 -translate-y-full"
+              >
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-sm font-semibold text-white shadow-sm">
+                  <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+                  </svg>
+                  <span>{unidad.nombre}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Barra fija inferior bajo 1024px con safe-area-inset-bottom -->
+  <div
+    class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[var(--shadow-warm)] lg:hidden"
+  >
+    <a
+      href={whatsappHref}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-whatsapp w-full text-center"
+    >
+      Consultar por {unidad.nombre}
+    </a>
+  </div>
+
+  <Galeria />
+  <Footer />
+</Layout>

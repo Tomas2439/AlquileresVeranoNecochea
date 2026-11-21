@@ -2,24 +2,21 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
-import AsiloSection from '../components/AsiloSection.astro';
+import Alojamientos from '../components/Alojamientos.astro';
 import InfoEstadia from '../components/InfoEstadia.astro';
+import Ubicacion from '../components/Ubicacion.astro';
 import CtaWhatsapp from '../components/CtaWhatsapp.astro';
 import Footer from '../components/Footer.astro';
 import WhatsappFloat from '../components/WhatsappFloat.astro';
-import { ASILOS } from '../data/alojamientos';
 ---
 
 <Layout>
   <Header />
   <main id="contenido-principal">
     <Hero />
-    {
-      ASILOS.map((asilo, index) => (
-        <AsiloSection asilo={asilo} index={index} />
-      ))
-    }
+    <Alojamientos />
     <InfoEstadia />
+    <Ubicacion />
     <CtaWhatsapp />
   </main>
   <Footer />

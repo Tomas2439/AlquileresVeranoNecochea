@@ -7,13 +7,12 @@ interface Props {
 }
 
 const {
-  title = 'AVN – Alquiler de Verano Necochea | Cabañas en Villa del Deportista',
-  description = 'Alquiler de verano en Necochea: cabañas en Villa del Deportista y departamento en zona céntrica. Tu refugio cerca del mar para bajar el ritmo y disfrutar.',
+  title = 'AVN – Alquiler de verano en Necochea: cabañas y departamento cerca del mar',
+  description = 'Alquiler de verano en Necochea: cabañas y departamento en tres zonas distintas para disfrutar del mar, el parque y el centro.',
 } = Astro.props;
 
-const canonicalUrl = Astro.site
-  ? new URL(Astro.url.pathname, Astro.site).toString()
-  : Astro.url.href;
+const siteBase = Astro.site ?? new URL('https://alquilerveranonecochea.netlify.app');
+const canonicalUrl = new URL(Astro.url.pathname, siteBase).toString();
 ---
 
 <!doctype html>
@@ -47,10 +46,10 @@ const canonicalUrl = Astro.site
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@400;500;600&display=swap"
     />
   </head>
-  <body class="bg-bg text-cream font-sans antialiased selection:bg-terracotta selection:text-cream">
+  <body class="bg-bg text-text font-sans antialiased selection:bg-accent selection:text-white">
     <a
       href="#contenido-principal"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-[10px] focus:bg-terracotta focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-cream"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-[10px] focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
     >
       Ir al contenido principal
     </a>
@@ -70,7 +69,7 @@ const canonicalUrl = Astro.site
               }
             }
           },
-          { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }
+          { threshold: 0.1, rootMargin: '0px 0px -24px 0px' }
         );
 
         document.querySelectorAll('.reveal-on-scroll').forEach((el) => observer.observe(el));

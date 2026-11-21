@@ -1,23 +1,44 @@
 ---
 import { Image } from 'astro:assets';
 import { WHATSAPP_URL } from '../data/alojamientos';
-import { getFolderImages } from '../utils/media';
+import { getFolderImages, getFolderVideos } from '../utils/media';
 
 const heroImages = getFolderImages('hero');
 const heroImage = heroImages[0];
+const heroVideos = getFolderVideos('hero');
+const heroVideo = heroVideos[0];
 ---
 
 <section
   id="inicio"
-  class="relative flex min-h-[min(84svh,680px)] items-center overflow-hidden border-b border-[var(--border-soft)] bg-bg-deep"
+  class="relative flex min-h-[min(64svh,520px)] items-center overflow-hidden bg-dark text-dark-text md:min-h-[min(78svh,640px)]"
 >
-  <!-- Espacio preparado para sumar un clip corto de video en el futuro (sin video en esta entrega) -->
   {
-    heroImage ? (
+    heroVideo ? (
+      <>
+        <video
+          id="hero-bg-video"
+          src={heroVideo}
+          poster={heroImage?.src}
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-hidden="true"
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+        <div
+          class="absolute inset-0"
+          style="background: var(--hero-scrim);"
+          aria-hidden="true"
+        />
+      </>
+    ) : heroImage ? (
       <>
         <Image
           src={heroImage}
-          alt="Refugio costero AVN en Necochea"
+          alt="Alquiler de verano AVN cerca del mar en Necochea"
           loading="eager"
           fetchpriority="high"
           widths={[640, 1024, 1440]}
@@ -31,38 +52,34 @@ const heroImage = heroImages[0];
         />
       </>
     ) : (
-      <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div
-          class="absolute inset-0 opacity-60"
-          style="background: var(--hero-glow);"
-        />
-        <span class="label-kicker absolute right-4 bottom-4 rounded-[10px] border border-[var(--border-soft)] bg-surface px-3 py-1.5 sm:right-8 sm:bottom-6">
-          FOTO PENDIENTE – hero
-        </span>
-      </div>
+      <div
+        class="pointer-events-none absolute inset-0"
+        style="background: var(--hero-fallback);"
+        aria-hidden="true"
+      />
     )
   }
 
-  <div class="relative z-10 mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-    <div class="max-w-2xl">
+  <div class="relative z-10 mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+    <div class="max-w-3xl">
       <h1
-        class="font-serif font-medium tracking-[-0.02em] text-cream"
-        style="font-size: var(--text-hero); line-height: 1.04;"
+        class="font-serif font-medium tracking-[-0.02em] text-dark-text"
+        style="font-size: var(--text-hero); line-height: 1.05;"
       >
         Tu refugio cerca del mar
       </h1>
       <p
-        class="mt-5 max-w-xl font-sans font-normal text-sand"
+        class="mt-4 max-w-2xl font-sans font-normal text-dark-text/90"
         style="font-size: var(--text-lead); line-height: 1.65;"
       >
         Un lugar para bajar el ritmo, conectar con la naturaleza y disfrutar de las vacaciones.
       </p>
-      <div class="mt-8">
+      <div class="mt-7 hidden md:block">
         <a
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          class="btn-primary"
+          class="btn-whatsapp"
         >
           Consultar por WhatsApp
         </a>
@@ -70,3 +87,11 @@ const heroImage = heroImages[0];
     </div>
   </div>
 </section>
+
+<script>
+  const heroVideoEl = document.getElementById('hero-bg-video') as HTMLVideoElement | null;
+  if (heroVideoEl && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    heroVideoEl.pause();
+    heroVideoEl.removeAttribute('autoplay');
+  }
+</script>

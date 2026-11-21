@@ -1,39 +1,42 @@
 ---
 interface Props {
-  compact?: boolean;
+  variant?: 'header' | 'footer';
 }
 
-const { compact = false } = Astro.props;
+const { variant = 'header' } = Astro.props;
+const isFooter = variant === 'footer';
 ---
 
 <!-- TODO: Reemplazar este bloque por el logo real de AVN (SVG o imagen) cuando esté disponible -->
-<span class="inline-flex flex-col items-center leading-none select-none">
-  <svg
-    class={compact ? 'w-9 h-3 mb-0.5' : 'w-12 h-3.5 mb-1'}
-    viewBox="0 0 48 14"
-    fill="none"
-    aria-hidden="true"
-  >
-    <path
-      d="M4 12L24 2.5L44 12"
-      stroke="var(--terracotta)"
-      stroke-width="2.2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-  <span
-    class={`font-serif font-semibold tracking-[0.14em] text-cream ${
-      compact ? 'text-[1.375rem]' : 'text-[1.75rem]'
-    }`}
-  >
-    AVN
+<span class="inline-flex flex-col items-start leading-none select-none">
+  <span class="inline-flex flex-col items-center">
+    <svg
+      class={isFooter ? 'w-12 h-3.5 mb-1' : 'w-10 h-3 mb-0.5'}
+      viewBox="0 0 48 14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 12L24 2.5L44 12"
+        stroke={isFooter ? 'var(--accent-on-dark)' : 'var(--accent)'}
+        stroke-width="2.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <span
+      class={`font-serif font-semibold tracking-[0.12em] ${
+        isFooter ? 'text-3xl text-dark-text' : 'text-2xl text-text'
+      }`}
+    >
+      AVN
+    </span>
   </span>
-  <span
-    class={`font-sans font-medium uppercase tracking-[0.12em] text-sand ${
-      compact ? 'text-[0.5625rem] mt-0.5' : 'text-[0.625rem] mt-1'
-    }`}
-  >
-    ALQUILER DE VERANO NECOCHEA
-  </span>
+  {
+    isFooter && (
+      <span class="mt-1.5 font-sans text-sm font-normal text-dark-muted">
+        Alquiler de verano en Necochea
+      </span>
+    )
+  }
 </span>
