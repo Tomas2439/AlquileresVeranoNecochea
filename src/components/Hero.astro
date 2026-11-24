@@ -11,40 +11,36 @@ const heroVideo = heroVideos[0];
 
 <section
   id="inicio"
-  class="relative flex min-h-[min(64svh,520px)] items-center overflow-hidden bg-dark text-dark-text md:min-h-[min(78svh,640px)]"
+  class="relative flex min-h-[60vh] max-h-[720px] items-center overflow-hidden bg-dark text-dark-text"
 >
   {
-    heroVideo ? (
+    heroVideo || heroImage ? (
       <>
-        <video
-          id="hero-bg-video"
-          src={heroVideo}
-          poster={heroImage?.src}
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          aria-hidden="true"
-          class="absolute inset-0 h-full w-full object-cover"
-        />
-        <div
-          class="absolute inset-0"
-          style="background: var(--hero-scrim);"
-          aria-hidden="true"
-        />
-      </>
-    ) : heroImage ? (
-      <>
-        <Image
-          src={heroImage}
-          alt="Alquiler de verano AVN cerca del mar en Necochea"
-          loading="eager"
-          fetchpriority="high"
-          widths={[640, 1024, 1440]}
-          sizes="100vw"
-          class="absolute inset-0 h-full w-full object-cover"
-        />
+        {heroImage && (
+          <Image
+            src={heroImage}
+            alt="Costa y entorno natural de Necochea"
+            loading="eager"
+            fetchpriority="high"
+            widths={[1280, 1920, 2560]}
+            sizes="100vw"
+            class="absolute inset-0 h-full w-full object-cover object-[35%_60%]"
+          />
+        )}
+        {heroVideo && (
+          <video
+            id="hero-bg-video"
+            src={heroVideo}
+            poster={heroImage?.src}
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-hidden="true"
+            class="absolute inset-0 h-full w-full object-cover object-[35%_60%]"
+          />
+        )}
         <div
           class="absolute inset-0"
           style="background: var(--hero-scrim);"
