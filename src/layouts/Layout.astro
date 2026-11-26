@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = 'AVN – Alquiler de verano en Necochea: cabañas y departamento cerca del mar',
-  description = 'Alquiler de verano en Necochea: cabañas y departamento en tres zonas distintas para disfrutar del mar, el parque y el centro.',
+  description = 'Alquiler de verano en Necochea: cabañas cerca del Parque Miguel Lillo y departamento en Centro Playa, a pocos minutos a pie de la playa.',
 } = Astro.props;
 
 const siteBase = Astro.site ?? new URL('https://alquilerveranonecochea.netlify.app');
@@ -23,7 +23,12 @@ const canonicalUrl = new URL(Astro.url.pathname, siteBase).toString();
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#F6EFE4" />
 
     <!-- Open Graph / WhatsApp -->
     <meta property="og:type" content="website" />

@@ -7,34 +7,21 @@ const { variant = 'header' } = Astro.props;
 const isFooter = variant === 'footer';
 ---
 
-<!-- TODO: Reemplazar este bloque por el logo real de AVN (SVG o imagen) cuando esté disponible -->
-<span class="inline-flex flex-col items-start leading-none select-none">
-  <span class="inline-flex flex-col items-center">
-    <svg
-      class={isFooter ? 'w-12 h-3.5 mb-1' : 'w-10 h-3 mb-0.5'}
-      viewBox="0 0 48 14"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M4 12L24 2.5L44 12"
-        stroke={isFooter ? 'var(--accent-on-dark)' : 'var(--accent)'}
-        stroke-width="2.4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
-    <span
-      class={`font-serif font-semibold tracking-[0.12em] ${
-        isFooter ? 'text-3xl text-dark-text' : 'text-2xl text-text'
-      }`}
-    >
-      AVN
-    </span>
-  </span>
+<span class="inline-flex items-center gap-3 leading-none select-none">
+  <img
+    src="/LogoAVN.png"
+    alt="AVN – Alquiler de Verano Necochea"
+    width="48"
+    height="48"
+    loading="eager"
+    decoding="async"
+    class={`shrink-0 rounded-[8px] object-contain ${
+      isFooter ? 'h-12 w-12' : 'h-11 w-11 shadow-xs'
+    }`}
+  />
   {
     isFooter && (
-      <span class="mt-1.5 font-sans text-sm font-normal text-dark-muted">
+      <span class="font-sans text-sm font-normal text-dark-muted">
         Alquiler de verano en Necochea
       </span>
     )

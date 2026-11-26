@@ -1,15 +1,15 @@
 ---
 import { Image, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import type { Alojamiento, ZonaSlug } from '../data/alojamientos';
+import type { Alojamiento, GrupoSlug } from '../data/alojamientos';
 import { getFolderImages, getFolderVideos } from '../utils/media';
 
 interface Props {
   unidad: Alojamiento;
-  zonaSlug: ZonaSlug;
+  grupoSlug: GrupoSlug;
 }
 
-const { unidad, zonaSlug } = Astro.props;
+const { unidad, grupoSlug } = Astro.props;
 const rawImages = getFolderImages(unidad.slug);
 const folderVideos = getFolderVideos(unidad.slug);
 const posterTime = unidad.videoPosterTime ?? 1.5;
@@ -17,7 +17,7 @@ const posterTime = unidad.videoPosterTime ?? 1.5;
 const fallbackAlts = [
   `Vista exterior principal de ${unidad.nombre}`,
   `Ambiente interior y estar de ${unidad.nombre}`,
-  `Sector de cocina y comedor de ${unidad.nombre}`,
+  `Cocina y comedor de ${unidad.nombre}`,
   `Dormitorio equipado de ${unidad.nombre}`,
   `Detalle de ambientes en ${unidad.nombre}`,
   `Equipamiento interior de ${unidad.nombre}`,
@@ -92,7 +92,7 @@ const hasMultiple = slides.length > 1;
         <div class="relative">
           <!-- Botón circular de retorno superpuesto (<1024px, 44x44px) -->
           <a
-            href={`/#${zonaSlug}`}
+            href={`/#${grupoSlug}`}
             aria-label="Volver a alojamientos"
             class="absolute top-3 left-3 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full bg-dark/85 text-dark-text shadow-md hover:bg-dark lg:hidden"
           >

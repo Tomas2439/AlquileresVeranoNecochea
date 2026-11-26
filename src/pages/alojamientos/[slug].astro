@@ -8,9 +8,9 @@ import Footer from '../../components/Footer.astro';
 import ServicioIcon from '../../components/ServicioIcon.astro';
 import {
   ALOJAMIENTOS,
+  getGrupoBySlug,
   getUnidadBySlug,
   getWhatsappUnitUrl,
-  getZonaBySlug,
   type Alojamiento,
 } from '../../data/alojamientos';
 import { getFolderImages } from '../../utils/media';
@@ -27,7 +27,7 @@ interface Props {
 }
 
 const { unidad } = Astro.props;
-const zona = getZonaBySlug(unidad.zonaSlug);
+const grupo = getGrupoBySlug(unidad.grupoSlug);
 const hermana = unidad.hermanaSlug ? getUnidadBySlug(unidad.hermanaSlug) : undefined;
 const hermanaCover = hermana ? getFolderImages(hermana.slug)[0] : undefined;
 const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
@@ -35,7 +35,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
 
 <Layout
   title={`${unidad.nombre} (${unidad.tipo}) | AVN – Alquiler de verano en Necochea`}
-  description={`${unidad.tipo} ${unidad.nombre} para ${unidad.capacidad} en Necochea. ${unidad.diferencial}`}
+  description={`${unidad.tipo} ${unidad.nombre} para ${unidad.capacidad} en ${grupo.barrio}. ${unidad.diferencial}`}
 >
   <Header />
 
@@ -53,7 +53,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
           class="mb-4 hidden flex-nowrap items-center gap-1.5 overflow-x-auto text-sm whitespace-nowrap lg:flex"
         >
           <a
-            href={`/#${zona.slug}`}
+            href={`/#${grupo.slug}`}
             class="inline-flex min-h-[36px] items-center gap-1.5 font-medium text-accent hover:text-text"
           >
             <svg
@@ -70,10 +70,10 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
           </a>
           <span class="text-text-muted" aria-hidden="true">›</span>
           <a
-            href={`/#${zona.slug}`}
+            href={`/#${grupo.slug}`}
             class="inline-flex min-h-[36px] items-center font-medium text-accent hover:text-text"
           >
-            {zona.nombre}
+            {grupo.nombre}
           </a>
           <span class="text-text-muted" aria-hidden="true">›</span>
           <span class="font-medium text-text" aria-current="page">
@@ -84,7 +84,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
         <div class="grid grid-cols-1 lg:grid-cols-12 lg:items-start lg:gap-10">
           <!-- Columna izquierda (~60%, max-w-720px): Galería 4:3 -->
           <div class="lg:col-span-7">
-            <CarruselDetalle unidad={unidad} zonaSlug={zona.slug} />
+            <CarruselDetalle unidad={unidad} grupoSlug={grupo.slug} />
           </div>
 
           <!-- Columna derecha (~40%, sticky en desktop): Título, datos, descripción, servicios, horarios y CTA -->
@@ -96,7 +96,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
               {unidad.nombre}
             </h1>
             <p class="mt-1.5 text-sm font-medium text-accent">
-              {unidad.tipo} · {unidad.capacidad} · {zona.etiquetaCorta}
+              {unidad.tipo} · {unidad.capacidad} · {grupo.etiquetaCorta}
             </p>
             <p class="mt-2.5 line-clamp-2 text-base leading-relaxed text-text-muted">
               {unidad.diferencial}
@@ -160,7 +160,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
               hermana && (
                 <div class="mt-6 border-t border-border pt-5">
                   <p class="mb-2 text-sm font-medium text-text-muted">
-                    En la misma zona
+                    También en {grupo.nombre}
                   </p>
                   <a
                     href={`/alojamientos/${hermana.slug}`}
@@ -213,7 +213,7 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
       </div>
     </section>
 
-    <!-- Mini-ubicación debajo -->
+    <!-- Ubicación real en Google Maps -->
     <section class="py-10 sm:py-14">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="rounded-[12px] border border-border bg-surface p-6 sm:p-8">
@@ -223,16 +223,16 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
                 class="font-serif font-medium text-text"
                 style="font-size: var(--text-h2); line-height: 1.1;"
               >
-                Ubicación de {zona.nombre}
+                Ubicación de {grupo.nombre}
               </h2>
-              <p class="mt-2 text-sm text-text-muted">{zona.barrio}</p>
-              {zona.distanciaMar && (
-                <p class="mt-1 text-sm text-text-muted">{zona.distanciaMar}</p>
+              <p class="mt-2 text-sm text-text-muted">{grupo.barrio}</p>
+              {grupo.distanciaMar && (
+                <p class="mt-1 text-sm font-medium text-accent">{grupo.distanciaMar}</p>
               )}
 
-              {zona.referencias.length > 0 && (
+              {grupo.referencias.length > 0 && (
                 <ul class="mt-4 flex flex-wrap gap-2">
-                  {zona.referencias.map((ref) => (
+                  {grupo.referencias.map((ref) => (
                     <li class="rounded-[8px] border border-border bg-bg px-2.5 py-1 text-sm text-text-muted">
                       {ref}
                     </li>
@@ -241,31 +241,18 @@ const whatsappHref = getWhatsappUnitUrl(unidad.nombre);
               )}
             </div>
 
-            <div class="relative h-56 overflow-hidden rounded-[10px] border border-border bg-bg lg:col-span-7">
-              <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="xMidYMid slice"
+            <div class="relative h-72 overflow-hidden rounded-[10px] border border-border bg-bg sm:h-80 lg:col-span-7">
+              <iframe
+                src={grupo.mapEmbedUrl}
+                title={`Mapa de ubicación de ${unidad.nombre} (${grupo.nombre}) en Necochea`}
+                width="600"
+                height="450"
+                style="border:0;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
                 class="h-full w-full"
-                role="img"
-                aria-label={`Ubicación aproximada de ${unidad.nombre} en Necochea`}
-              >
-                <rect width="100" height="100" fill="#F3E9D8" />
-                <path d="M12 20 Q38 14 55 32 Q50 56 26 58 Q8 46 12 20 Z" fill="#DDE6D5" />
-                <path d="M0 78 Q35 68 65 56 T100 44 L100 100 L0 100 Z" fill="#E8DAC3" />
-                <path d="M0 84 Q35 74 65 62 T100 50 L100 100 L0 100 Z" fill="#C7DCE0" />
-              </svg>
-
-              <div
-                style={`left: ${zona.mapPin.x}%; top: ${zona.mapPin.y}%;`}
-                class="absolute -translate-x-1/2 -translate-y-full"
-              >
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-sm font-semibold text-white shadow-sm">
-                  <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
-                  </svg>
-                  <span>{unidad.nombre}</span>
-                </span>
-              </div>
+              />
             </div>
           </div>
         </div>
