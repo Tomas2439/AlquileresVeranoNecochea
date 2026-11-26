@@ -162,23 +162,15 @@ const hasMultiple = slides.length > 1;
                   </button>
                 ) : (
                   <div class="relative flex h-full w-full items-center justify-center overflow-hidden bg-dark">
-                    <!-- Fondo desenfocado tomado del propio cuadro del video -->
-                    <video
-                      src={`${slide.videoUrl}#t=${posterTime}`}
-                      muted
-                      playsinline
-                      preload="metadata"
-                      aria-hidden="true"
-                      style="filter: blur(24px); transform: scale(1.2); opacity: 0.55;"
-                      class="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                    />
-
-                    <!-- Sin atributo controls inicial para no duplicar play nativo con el play central -->
+                    <!-- Un único elemento <video> por diapositiva para evitar bloqueo de decodificador en mobile (iOS/Android).
+                         Sin controls iniciales para no duplicar play nativo con el play central. -->
                     <video
                       data-carousel-video
+                      data-poster-time={posterTime}
                       src={`${slide.videoUrl}#t=${posterTime}`}
-                      preload="metadata"
+                      preload="auto"
                       playsinline
+                      webkit-playsinline
                       aria-label={slide.alt}
                       class="relative z-10 h-full w-full object-contain"
                     >
@@ -480,10 +472,47 @@ const hasMultiple = slides.length > 1;
       const overlay = slideEl.querySelector<HTMLButtonElement>('[data-video-play-overlay]');
       if (!video || !overlay) return;
 
+      video.playsInline = true;
+      const posterSec = Number(video.dataset.posterTime) || 1.5;
+
+      // Posicionar el frame inicial de vista previa en mobile y desktop
+      const setInitialPosterFrame = () => {
+        if (video.dataset.started === 'true') return;
+        if (video.duration && video.duration > posterSec) {
+          try {
+            video.currentTime = posterSec;
+          } catch {}
+        }
+      };
+
+      if (video.readyState >= 1) {
+        setInitialPosterFrame();
+      } else {
+        video.addEventListener('loadedmetadata', setInitialPosterFrame, { once: true });
+      }
+
       overlay.addEventListener('click', () => {
+        // Si es la primera reproducción y estaba posicionado en el segundo del poster (ej. seg 13), reiniciar a 0
+        if (video.dataset.started !== 'true') {
+          video.dataset.started = 'true';
+          try {
+            video.currentTime = 0;
+          } catch {}
+        }
         overlay.style.display = 'none';
         video.controls = true;
-        video.play();
+
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Fallback si el navegador móvil restringe audio inicial
+            video.muted = true;
+            video.play().catch(() => {
+              video.controls = false;
+              overlay.style.display = 'flex';
+            });
+          });
+        }
       });
 
       video.addEventListener('play', () => {
@@ -492,6 +521,7 @@ const hasMultiple = slides.length > 1;
       });
 
       video.addEventListener('ended', () => {
+        video.dataset.started = 'false';
         video.controls = false;
         overlay.style.display = 'flex';
       });

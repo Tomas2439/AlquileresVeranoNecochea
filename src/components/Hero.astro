@@ -36,7 +36,8 @@ const heroVideo = heroVideos[0];
             muted
             loop
             playsinline
-            preload="metadata"
+            webkit-playsinline
+            preload="auto"
             aria-hidden="true"
             class="absolute inset-0 h-full w-full object-cover object-[35%_60%]"
           />
@@ -86,8 +87,23 @@ const heroVideo = heroVideos[0];
 
 <script>
   const heroVideoEl = document.getElementById('hero-bg-video') as HTMLVideoElement | null;
-  if (heroVideoEl && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    heroVideoEl.pause();
-    heroVideoEl.removeAttribute('autoplay');
+  if (heroVideoEl) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      heroVideoEl.pause();
+      heroVideoEl.removeAttribute('autoplay');
+    } else {
+      heroVideoEl.defaultMuted = true;
+      heroVideoEl.muted = true;
+      heroVideoEl.playsInline = true;
+      const tryPlayHero = () => {
+        if (heroVideoEl.paused) {
+          heroVideoEl.play().catch(() => {});
+        }
+      };
+      tryPlayHero();
+      heroVideoEl.addEventListener('loadedmetadata', tryPlayHero, { once: true });
+      heroVideoEl.addEventListener('canplay', tryPlayHero, { once: true });
+      document.addEventListener('touchstart', tryPlayHero, { once: true, passive: true });
+    }
   }
 </script>
